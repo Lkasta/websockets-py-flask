@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, render_template, request, send_file
 from repository.database import db
 
 from models.payment import Payment
@@ -46,8 +46,20 @@ def pix_confirmation():
   return jsonify({"message": "The payment has been confirmed!"})
 
 @app.route('/payments/pix/<int:payment_id>', methods=['GET'])
-def payment_pix_page():
-  return 'payment'
+def payment_pix_page(payment_id):
+  payment = Payment.query.get(payment_id)
+
+  return render_template(
+    'payment.html', 
+    payment_id=payment.id, 
+    value=payment.value,
+    host="http://127.0.0.1:5000",
+    qr_code=payment.qr_code
+  )
+
+@app.route('/', methods=['GET'])
+def hello():
+  return 'Jonas'
 
 if __name__ == "__main__":
   app.run(debug=True)
