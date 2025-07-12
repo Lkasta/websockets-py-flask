@@ -43,8 +43,27 @@ def create_payment_pix():
 def payment_pix(file_name):
   return send_file(f"static/img/{file_name}.png", mimetype='image/png')
 
-@app.route('/payments/pix/confirmation', methods=['POST'])
+@app.route('/payments/pix/confirmation/', methods=['POST'])
 def pix_confirmation():
+  data = request.get_json()
+
+  if "bank_payment_id" not in data and "value" not in data:
+    return jsonify({"message": "Values cannot be null!"}), 400
+  
+  bank_payment_id = data.get("bank_payment_id")
+  value = data.get("value")
+
+  payment = Payment.query.filter_by(bank_payment_id=bank_payment_id).first_or_404("Bank payment id not found!")
+
+  if payment.paid:
+    return jsonify({"message": "Payment has been made!"}), 400
+
+  if value != payment.value:
+    return jsonify({"message": "Invalid payment data!"}), 400
+  
+  payment.paid = True
+  db.session.commit()
+  
   return jsonify({"message": "The payment has been confirmed!"})
 
 @app.route('/payments/pix/<int:payment_id>', methods=['GET'])
@@ -58,6 +77,10 @@ def payment_pix_page(payment_id):
     host="http://127.0.0.1:5000",
     qr_code=payment.qr_code
   )
+
+@socketio.on('connect')
+def handle_connect():
+  print("Jonas connected on server🤘")
 
 @app.route('/', methods=['GET'])
 def hello():
