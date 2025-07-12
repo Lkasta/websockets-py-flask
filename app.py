@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, render_template, request, send_file
+from flask_socketio import SocketIO
 from repository.database import db
 
 from models.payment import Payment
@@ -12,6 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "your_secret_key"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+socketio = SocketIO(app)
 db.init_app(app)
 
 @app.route('/payments/pix/', methods=['POST'])
@@ -62,4 +64,4 @@ def hello():
   return 'Jonas'
 
 if __name__ == "__main__":
-  app.run(debug=True)
+  socketio.run(app, debug=True)
